@@ -61,6 +61,15 @@ def remove_after_last_digit(text):
     # 使用正则表达式进行匹配
     return re.sub(r'(\d)[^\d]*$', r'\1', text)
 
+def pivot_for_manual(pickdf):
+    pivotdf = pickdf[['OSHNA1','OSHNA2','OSHAD1','OSHAD2','SourceFile','OSONO']]
+    pivotdf = pivotdf.groupby(['SourceFile', 'OSONO']).first().reset_index()
+    pivotdf['SHIPTO名前'] = pivotdf['OSHNA1'] + pivotdf['OSHNA2'].fillna("")
+    pivotdf['SHIPTO住所'] = pivotdf['OSHAD1'] + pivotdf['OSHAD2'].fillna("") 
+    pivotdf = pivotdf.drop(columns=['OSHNA1','OSHNA2','OSHAD1','OSHAD2'])
+    pivotdf = pivotdf.rename(columns={'SourceFile':'PICK回目','OSONO':'#ORD'})
+    return pivotdf
+
 def order_num_count(pickdf):
     order_countdf = pickdf.groupby('SourceFile')['OSONO'].nunique().reset_index()
     
@@ -135,7 +144,7 @@ def consolidate_shipment(pickdf,name_block_list=None,address_block_list=None,fix
         consolidate_order_dict.update(other_dict)
     return consolidate_order_dict
 
-def template_fulfillment(excel_template,shipment_direction,outputpath):
+def template_fulfillment(excel_template,shipment_direction,pivotdf,outputpath):
     shipment_all=shipment_direction.get_all_shipments()
     wb = load_workbook(filename=excel_template)
     ws = wb['Epiroc PickList送付']
@@ -176,6 +185,22 @@ def template_fulfillment(excel_template,shipment_direction,outputpath):
     for index, (key, values) in enumerate(consolidated_shipment_dict.items(), start=start_row):
         ws.cell(row=index, column=key_col, value=key)
         ws.cell(row=index, column=value_col, value=', '.join(values))
+
+    pivot_sheet_name = 'pivotcsv'
+    if pivot_sheet_name in wb.sheetnames:
+        ws_pivot = wb[pivot_sheet_name]
+    else:
+        ws_pivot = wb.create_sheet(title=pivot_sheet_name)
+
+    for col_idx, col_name in enumerate(pivotdf.columns, start=1):
+        ws_pivot.cell(row=1, column=col_idx, value=col_name)
+    
+    for r_idx, row in enumerate(pivotdf.itertuples(index=False), start=2):
+        for c_idx, value in enumerate(row, start=1):
+            ws_pivot.cell(row=r_idx, column=c_idx, value=value)
+
+    ws_pivot.column_dimensions['C'].width = 56
+    ws_pivot.column_dimensions['D'].width = 56
         
     wb.save(outputpath)
 
@@ -196,6 +221,7 @@ if __name__ == '__main__':
     
     shipment_direction = ShipmentDirection()
     pickdf = pickingcsv_loading(csv_list,header_list)
+    pivotdf = pivot_for_manual(pickdf)
     
     pickdf.to_csv(tempcsv,encoding='UTF_8_sig',index=False)
     pickdf = pd.read_csv(tempcsv,encoding='UTF_8_sig',dtype="str")
@@ -216,5 +242,5 @@ if __name__ == '__main__':
     shipment_direction.add_consolidated_shipment_orders(consolidate_shipment_dict)
     print(shipment_direction.get_all_shipments())
     print(shipment_direction.get_consolidated_shipment_orders())
-    template_fulfillment(excel_template,shipment_direction,output_path)
+    template_fulfillment(excel_template,shipment_direction,pivotdf,output_path)
 

@@ -5,14 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>送り状鑑作成システム</title>
     <link rel="stylesheet" href="static/styles.css">
+    <style>
+        .file-list {
+            margin-top: 10px;
+        }
+        .file-item {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .file-name {
+            flex-grow: 1;
+        }
+        .move-button {
+            margin-left: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>BPCS 出荷CSVファイル アップロード</h1>
         <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="files" multiple>
+            <input type="file" id="fileInput" multiple>
+            <button type="button" id="addFileButton">ファイルを追加</button>
+            <div class="file-list" id="fileList"></div>
             <button type="submit">作成開始</button>
         </form>
     </div>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadForm = document.getElementById('uploadForm');
+        let filesArray = [];
+
+        document.getElementById('addFileButton').addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function(event) {
+            Array.from(event.target.files).forEach(file => {
+                filesArray.push(file);
+            });
+            renderFileList();
+        });
+
+        function renderFileList() {
+            fileList.innerHTML = '';
+            filesArray.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('file-item');
+
+                const fileName = document.createElement('span');
+                fileName.classList.add('file-name');
+                fileName.textContent = (index + 1) + '. ' + file.name;
+                fileItem.appendChild(fileName);
+
+                const moveUpButton = document.createElement('button');
+                moveUpButton.classList.add('move-button');
+                moveUpButton.textContent = '↑';
+                moveUpButton.onclick = () => moveFile(index, -1);
+                fileItem.appendChild(moveUpButton);
+
+                const moveDownButton = document.createElement('button');
+                moveDownButton.classList.add('move-button');
+                moveDownButton.textContent = '↓';
+                moveDownButton.onclick = () => moveFile(index, 1);
+                fileItem.appendChild(moveDownButton);
+
+                const removeButton = document.createElement('button');
+                removeButton.classList.add('move-button');
+                removeButton.textContent = '✖';
+                removeButton.onclick = () => removeFile(index);
+                fileItem.appendChild(removeButton);
+
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function moveFile(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < filesArray.length) {
+                const temp = filesArray[index];
+                filesArray[index] = filesArray[newIndex];
+                filesArray[newIndex] = temp;
+                renderFileList();
+            }
+        }
+
+        function removeFile(index) {
+            filesArray.splice(index, 1);
+            renderFileList();
+        }
+
+        uploadForm.addEventListener('submit', function(event) {
+            const formData = new FormData();
+            filesArray.forEach((file, index) => {
+                formData.append('files', file);
+            });
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    alert('ファイルが正常にアップロードされました');
+                } else {
+                    alert('ファイルのアップロードに失敗しました');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('ファイルのアップロード中にエラーが発生しました');
+            });
+
+            event.preventDefault();
+        });
+    </script>
 </body>
 </html>

@@ -1,103 +1,40 @@
-/* 基本样式 */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    max-width: 800px;
-    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 50%;
+    margin: auto;
     padding: 20px;
-    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 h1 {
-    color: #2c3e50;
     text-align: center;
-    margin-bottom: 30px;
 }
 
-/* 表单样式 */
-#uploadForm {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.file-list {
+    margin-top: 10px;
 }
 
-/* 文件输入样式 */
-#fileInput {
-    width: 0.1px;
-    height: 0.1px;
-    opacity: 0;
-    overflow: hidden;
-    position: absolute;
-    z-index: -1;
-}
-
-#fileInput + label {
-    font-size: 1.25em;
-    font-weight: 700;
-    color: white;
-    background-color: #3498db;
-    display: inline-block;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-#fileInput:focus + label,
-#fileInput + label:hover {
-    background-color: #2980b9;
-}
-
-/* 文件列表样式 */
-#fileList {
-    list-style-type: none;
-    padding: 0;
-    margin-top: 20px;
-}
-
-#fileList li {
-    background-color: #ecf0f1;
-    margin: 10px 0;
-    padding: 10px 15px;
-    border-radius: 4px;
+.file-item {
+    margin-bottom: 5px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
-#fileList li::before {
-    content: '📄';
-    margin-right: 10px;
+.file-name {
+    flex-grow: 1;
 }
 
-/* 上传按钮样式 */
-button[type="submit"] {
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1.1em;
-    border-radius: 4px;
+.move-button {
+    margin-left: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: block;
-    width: 100%;
-    margin-top: 20px;
 }
 
-button[type="submit"]:hover {
-    background-color: #27ae60;
-}
-
-/* 响应式设计 */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    
-    #uploadForm {
-        padding: 20px;
-    }
+button {
+    padding: 5px 10px;
+    margin-top: 10px;
 }

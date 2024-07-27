@@ -2,7 +2,7 @@ import os
 import shutil
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory, flash
 import pandas as pd
-from shipping_bill import pickingcsv_loading, order_num_count, waybill_request, special_note, consolidate_shipment, template_fulfillment, ShipmentDirection
+from shipping_bill import pickingcsv_loading, order_num_count, waybill_request, special_note, consolidate_shipment, template_fulfillment,pivot_for_manual, ShipmentDirection
 
 app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -68,7 +68,7 @@ def upload_files():
         flash('No data found in the uploaded files')
         return redirect(url_for('index'))
     ordercount = order_num_count(pickdf)
-    #print(ordercount)
+    pivotdf = pivot_for_manual(pickdf)
     
     for picktime in ordercount:
         shipment_direction1.add_shipment(picktime, ordercount[picktime])
@@ -87,7 +87,7 @@ def upload_files():
     excel_template = 'static/送り状鑑(更新版_py).xlsx'  # 修改为你的模板路径
     output_file_path = os.path.join(app.config['PROCESSED_FOLDER'], '送り状鑑.xlsx')
     #print(shipment_direction1.get_all_shipments())
-    template_fulfillment(excel_template=excel_template, shipment_direction=shipment_direction1, outputpath=output_file_path)
+    template_fulfillment(excel_template=excel_template, shipment_direction=shipment_direction1,pivotdf=pivotdf, outputpath=output_file_path)
     # Clear the uploads folder after processing
     clear_folder(app.config['UPLOAD_FOLDER'])
     
