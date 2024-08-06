@@ -88,6 +88,7 @@ def special_note(pickdf):
     special_note_df['SpecialNote'] = special_note_df['PROFILE'].fillna('') + special_note_df['SpecialNote'].fillna('')
 
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状要","")
+    special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状ください","")
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("同梱不可","")
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.strip()
     special_note_df = special_note_df[special_note_df['SpecialNote'] != '']
@@ -103,7 +104,7 @@ def waybill_request(pickdf):
     waybill_request_df = pickdf[['OSONO','OSHAD3','OMEMO1','OMEMO2','OMEMO3','OMEMO4','SourceFile']].drop_duplicates()
     #waybill_request_df = waybill_request_df.dropna(subset = ['OMEMO3'])
     waybill_request_df['WB'] = waybill_request_df['OSHAD3'].fillna('') + waybill_request_df['OMEMO1'].fillna('')+ waybill_request_df['OMEMO2'].fillna('') + waybill_request_df['OMEMO3'].fillna('') + waybill_request_df['OMEMO4'].fillna('')
-    waybill_request_df = waybill_request_df[waybill_request_df['WB'].str.contains("送り状要")]
+    waybill_request_df = waybill_request_df[waybill_request_df['WB'].str.contains("送り状要|送り状ください")]
     waybill_request_df = waybill_request_df.groupby('SourceFile')['OSONO']
     waybill_request_dict = waybill_request_df.apply(list).to_dict()
     return waybill_request_dict
@@ -148,6 +149,7 @@ def template_fulfillment(excel_template,shipment_direction,pivotdf,outputpath):
     shipment_all=shipment_direction.get_all_shipments()
     wb = load_workbook(filename=excel_template)
     ws = wb['Epiroc PickList送付']
+    shipment_direction_list_length = [0]
 
     for i in range(1,len(shipment_all)+1,1):
         j = str(i)
@@ -158,11 +160,14 @@ def template_fulfillment(excel_template,shipment_direction,pivotdf,outputpath):
         ws.cell(row=(2*i+9),column=2,value=(j+'回目'))
         ws.cell(row=(2*i+9),column=4,value=total_orders)
         # Special Instructions
+        
         special_instruction = shipment_direction_dict_perpicktime["special_instructions"]
         if special_instruction is not None:
+            shipment_direction_list_length.append(len(special_instruction))
             for index,item in enumerate(special_instruction,start=1):
-                ws.cell(row=(21+index),column=(2),value=(j+'回目'))
-                ws.cell(row=(21+index),column=(3),value=(item))
+                ws.cell(row=(21+index+shipment_direction_list_length[i-1]),column=(2),value=(j+'回目'))
+                ws.cell(row=(21+index+shipment_direction_list_length[i-1]),column=(3),value=(item))
+        else: shipment_direction_list_length.append(0)
         # Waybill request
         waybill_request_list = shipment_direction_dict_perpicktime["tracking_needed_orders"]
         start_row = 36
@@ -205,12 +210,12 @@ def template_fulfillment(excel_template,shipment_direction,pivotdf,outputpath):
     wb.save(outputpath)
 
 if __name__ == '__main__':
-    csv0 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240726 1100.csv"
-    csv1 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240726 1430.csv"
-    csv2 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240726 1530.csv"
+    csv0 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240806 1100.csv"
+    csv1 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240806 1430.csv"
+    csv2 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240806 1530.csv"
     #csv3 = r"\\ssisjpfs0004\JPN\MRBA\Logistics\CMT Logistics\FromBPCS\DOWNLOADS\Yamato\送信済みデータ\lypl20240723 1530.csv"
 
-    tempcsv = "pick0726.csv"
+    tempcsv = "pick0806.csv"
     excel_template = r"C:\Users\jpeqz\OneDrive - Epiroc\Python\Outbounddoc\送り状鑑(更新版_py).xlsx"
     output_path = r"C:\Users\jpeqz\OneDrive - Epiroc\Python\Outbounddoc\output.xlsx"
     header_list = ["OSONO","OSHIP","OTYPE","OCUSPO","OCUSNO","OCUSNA","OCUSA1","OCUSA2","ODATE","OSHNA1","OSHNA2","OSHZIP","OSHAD1","OSHAD2","OSHAD3","OSHATN","OTELNO","OSOLNE","OITMN","OSERN","OLOCN","OIDESC","OQTY","ODDATE","ODTIME","OTRNSP","OMEMO1","OMEMO2","OMEMO3","OMEMO4","OSHIPR","OPGC","OPLC"]
