@@ -89,6 +89,8 @@ def special_note(pickdf):
 
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状要","")
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状ください","")
+    special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状願います","")
+    special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("送り状下さい","")
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.replace("同梱不可","")
     special_note_df['SpecialNote'] = special_note_df['SpecialNote'].str.strip()
     special_note_df = special_note_df[special_note_df['SpecialNote'] != '']
@@ -104,7 +106,7 @@ def waybill_request(pickdf):
     waybill_request_df = pickdf[['OSONO','OSHAD3','OMEMO1','OMEMO2','OMEMO3','OMEMO4','SourceFile']].drop_duplicates()
     #waybill_request_df = waybill_request_df.dropna(subset = ['OMEMO3'])
     waybill_request_df['WB'] = waybill_request_df['OSHAD3'].fillna('') + waybill_request_df['OMEMO1'].fillna('')+ waybill_request_df['OMEMO2'].fillna('') + waybill_request_df['OMEMO3'].fillna('') + waybill_request_df['OMEMO4'].fillna('')
-    waybill_request_df = waybill_request_df[waybill_request_df['WB'].str.contains("送り状要|送り状ください")]
+    waybill_request_df = waybill_request_df[waybill_request_df['WB'].str.contains("送り状要|送り状ください|送り状下さい|送り状願います")]
     waybill_request_df = waybill_request_df.groupby('SourceFile')['OSONO']
     waybill_request_dict = waybill_request_df.apply(list).to_dict()
     return waybill_request_dict
